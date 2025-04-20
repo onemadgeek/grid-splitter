@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Grid Splitter - A powerful tool for splitting and managing grid layouts. Create, customize and export grid templates with ease. Perfect for web designers and developers.">
+    <meta name="keywords" content="grid splitter, grid layout, web design tool, css grid generator, layout builder">
+    <title>Grid Splitter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --inchworm:#AAFF42;
+            --inchworm-complement:#B573FF;
+            --gunmetal:#1E2D2C;
+            --gunmetal-complement:#2D1E1F;
+            --orange:#FF7A2F;
+            --orange-complement:#2FB8FF;
+            --pale-violet:#B2A1FF;
+            --pale-violet-complement:#EEFFB2;
+            --bright-snow:#FFFFFF;
+            --bright-snow-complement:#000000;
+            --american-silver:#D1D1D1;
+            --american-silver-complement:#2E2E2E;
+            
+            /* Modern UI Colors */
+            --lime-green: #AAFF42;
+            --dark-navy: #141C2F;
+            --navy-blue: #1E293B;
+            --purple: #8B5CF6;
+            --coral: #FF6B4A;
+            
+            /* Theme Colors */
+            --primary:var(--lime-green);
+            --primary-complement:var(--purple);
+            --secondary:var(--purple);
+            --secondary-complement:var(--pale-violet-complement);
+            --tertiary:var(--coral);
+            --tertiary-complement:var(--orange-complement);
+            --accent:var(--lime-green);
+            --accent-complement:var(--purple);
+            
+            /* Dark Theme */
+            --background-start:#141C2F;
+            --background-end:#1E293B;
+            --background-overlay:rgba(30,41,59,0.95);
+            --background-base:#141C2F;
+            --surface-base:#1E293B;
+            --surface-light:rgba(255,255,255,0.07);
+            --surface-medium:rgba(255,255,255,0.04);
+            --surface-dark:#273549;
+            --surface-lighter:#1E293B;
+            --surface-darker:#141C2F;
+            --card-bg:#1E293B;
+            --card-shadow:0 10px 30px -5px rgba(0,0,0,0.3),0 8px 15px -6px rgba(0,0,0,0.2);
+            --text-primary:#f8fafc;
+            --text-secondary:#cbd5e1;
+            --text-tertiary:#94a3b8;
+            --text-accent:var(--lime-green);
+            --text-active:var(--lime-green);
+            --text-inactive:#64748b;
+            --border:rgba(255,255,255,0.1);
+            --error:#f43f5e;
+            --warning:var(--coral);
+            --success:var(--lime-green);
+            --info:var(--purple);
+            --primary-rgb:170,255,66
+        }
+        
+        [data-theme="light"]{
+            --primary:var(--lime-green);
+            --primary-complement:var(--purple);
+            --secondary:var(--purple);
+            --secondary-complement:var(--pale-violet-complement);
+            --tertiary:var(--coral);
+            --tertiary-complement:var(--orange-complement);
+            --accent:var(--lime-green);
+            --accent-complement:var(--purple);
+            --background-start:#f8fafc;
+            --background-end:#f1f5f9;
+            --background-overlay:rgba(255,255,255,0.95);
+            --background-base:var(--bright-snow);
+            --surface-base:var(--bright-snow);
+            --surface-light:rgba(0,0,0,0.03);
+            --surface-medium:rgba(0,0,0,0.06);
+            --surface-dark:#e2e8f0;
+            --surface-lighter:#f8fafc;
+            --surface-darker:#e2e8f0;
+            --card-bg:var(--bright-snow);
+            --card-shadow:0 10px 30px -5px rgba(0,0,0,0.05),0 8px 15px -6px rgba(0,0,0,0.02);
+            --text-primary:#1e293b;
+            --text-secondary:#475569;
+            --text-tertiary:#64748b;
+            --text-accent:var(--lime-green);
+            --text-active:var(--lime-green);
+            --text-inactive:var(--american-silver);
+            --border:rgba(0,0,0,0.08);
+            --error:#dc2626;
+            --warning:var(--coral);
+            --success:var(--lime-green);
+            --info:var(--purple);
+            --primary-rgb:170,255,66
+        }
+        *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+        body{background:linear-gradient(135deg,var(--background-start),var(--background-end));color:var(--text-primary);min-height:100vh;padding:0;margin:0;transition:background 0.5s ease,color 0.3s ease}
+        .app-container{max-width:1400px;margin:0 auto;padding:1.5rem 1rem}
+        header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;position:relative}
+        h1{font-size:2rem;font-weight:700;color:var(--primary);text-align:center;margin:0 auto;letter-spacing:-0.5px}
+        .main-content{display:grid;grid-template-columns:1fr;gap:1.25rem}
+        @media (min-width:1024px){.main-content{grid-template-columns:1fr 1fr;gap:1.25rem}}
+        .panel{background:var(--card-bg);border-radius:1rem;padding:1.25rem;box-shadow:var(--card-shadow);backdrop-filter:blur(10px);transition:all 0.3s ease;height:fit-content}
+        .panel-title{font-size:1.1rem;font-weight:600;margin-bottom:1rem;color:var(--text-primary);display:flex;align-items:center;gap:0.5rem}
+        .panel-title svg{stroke:var(--primary)}
+        .upload-container{display:flex;flex-direction:column;align-items:center;gap:1.25rem}
+        .upload-area{width:50%;aspect-ratio:1/1;border:2px dashed var(--border);border-radius:0.75rem;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;padding:1rem;background-color:var(--surface-darker);transition:all 0.3s ease;position:relative;overflow:hidden}
+        .upload-area:hover{border-color:var(--primary);background-color:var(--surface-light);transform:scale(1.01)}
+        .upload-icon{width:3rem;height:3rem;stroke:var(--primary);margin-bottom:1rem;opacity:0.8}
+        .upload-text{font-size:0.9rem;color:var(--text-secondary);text-align:center;max-width:90%}
+        .preview-image{max-width:100%;max-height:100%;object-fit:contain;border-radius:0.75rem}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem 1.25rem;border-radius:0.5rem;font-weight:600;font-size:0.95rem;cursor:pointer;transition:all 0.3s ease;border:none;box-shadow:0 4px 6px rgba(0,0,0,0.1);margin:10px;}
+        .btn-primary{background:var(--lime-green);color:var(--surface-darker);}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.15);filter:brightness(1.05)}
+        .btn-secondary{background:var(--purple);color:white}
+        .btn-secondary:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.15);filter:brightness(1.05)}
+        .btn-tertiary{background:var(--coral);color:white}
+        .btn-tertiary:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.15);filter:brightness(1.05)}
+        .grid-controls{background:var(--surface-darker);border-radius:0.75rem;padding:1rem;margin-bottom:1rem;box-shadow:inset 0 2px 4px rgba(0,0,0,0.1)}
+        .grid-input{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+        .input-group{display:flex;flex-direction:column;gap:0.4rem}
+        .grid-input input{width:80px;padding:0.6rem;border:1px solid var(--border);border-radius:0.5rem;text-align:center;background-color:var(--surface-base);color:var(--text-primary);font-size:1rem;font-weight:500;transition:border-color 0.2s}
+        .grid-input label{font-size:0.9rem;font-weight:500;color:var(--text-secondary)}
+        .container{position:relative;margin:0 auto;background-color:var(--surface-darker);border:1px solid var(--border);border-radius:0.75rem;overflow:hidden;box-shadow:var(--card-shadow);width:100%}
+        .grid-container{position:relative;width:100%;height:100%}
+        .grid-line{position:absolute;z-index:10;transition:background-color 0.2s ease}
+        .horizontal-line{width:100%;height:16px;cursor:row-resize;border-top:2px dashed var(--accent);margin-top:-8px;background-color:transparent;transition:all 0.2s ease}
+        .horizontal-line:hover{border-top:3px solid var(--primary);background-color:rgba(var(--primary-rgb,255,122,47),0.1);height:20px;margin-top:-10px}
+        .vertical-line{height:100%;width:16px;cursor:col-resize;border-left:2px dashed var(--accent);margin-left:-8px;background-color:transparent;transition:all 0.2s ease}
+        .vertical-line:hover{border-left:3px solid var(--primary);background-color:rgba(var(--primary-rgb,255,122,47),0.1);width:20px;margin-left:-10px}
+        .grid-cell{position:absolute;background-size:cover;background-position:center;border:none;transition:all 0.2s ease}
+        .cell-download{position:absolute;right:12px;top:12px;background-color:var(--surface-base);color:var(--primary);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+        .grid-cell:hover .cell-download{opacity:1;transform:scale(1.1) rotate(5deg)}
+        .cell-download:hover{background-color:var(--primary);color:white;transform:scale(1.2) rotate(5deg)!important}
+        .cell-number{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background-color:var(--surface-darker);color:var(--text-primary);border-radius:0.75rem;padding:0.75rem 1.25rem;font-size:1rem;font-weight:600;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+        .grid-cell:hover .cell-number{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
+        .no-image{display:flex;flex-direction:column;justify-content:center;align-items:center;background-color:var(--surface-light);border:2px dashed var(--border);color:var(--text-secondary);border-radius:0.75rem;height:100%;width:100%;gap:1rem}
+        .show-all-downloads .cell-download{opacity:1}
+        #loading-indicator{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:var(--background-overlay);z-index:1000;justify-content:center;align-items:center;flex-direction:column;backdrop-filter:blur(8px)}
+        .loading-spinner{width:80px;height:80px;margin-bottom:2rem;position:relative}
+        .loading-spinner:before,.loading-spinner:after{content:'';position:absolute;border-radius:50%;animation:ripple 2s ease-out infinite;top:0;left:0;width:100%;height:100%}
+        .loading-spinner:before{border:4px solid var(--primary-complement)}
+        .loading-spinner:after{border:4px solid var(--primary);animation-delay:1s}
+        @keyframes ripple{0%{transform:scale(0.4);opacity:1}100%{transform:scale(1.8);opacity:0}}
+        .loading-text{color:var(--text-primary);font-size:1.5rem;font-weight:600;margin-bottom:0.75rem;animation:pulse 2s infinite}
+        .loading-subtext{color:var(--text-secondary);font-size:1rem}
+        @keyframes pulse{0%{opacity:0.6}50%{opacity:1}100%{opacity:0.6}}
+        .theme-toggle{position:fixed;top:2rem;right:2rem;background:linear-gradient(135deg,var(--surface-base),var(--surface-lighter));color:var(--text-primary);width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.15);z-index:100;border:none;transition:all 0.4s ease;font-size:1.5rem}
+        .theme-toggle:hover{transform:scale(1.15) rotate(15deg);background:linear-gradient(135deg,var(--primary),var(--primary-complement));color:var(--bright-snow);box-shadow:0 8px 25px rgba(0,0,0,0.2)}
+        .grid-dimensions{display:flex;align-items:center;justify-content:center;background-color:var(--surface-darker);padding:0.6rem 1rem;border-radius:0.5rem;margin-top:1rem;box-shadow:inset 0 1px 2px rgba(0,0,0,0.1)}
+        .grid-dimensions span{font-size:1rem;font-weight:600;color:var(--text-tertiary)}
+        .grid-dimensions strong{color:var(--primary);font-weight:700;font-size:1.25rem;margin:0 0.35rem}
+        .tips-box{margin-top:1.25rem;padding:1rem;background-color:var(--surface-darker);border-left:3px solid var(--purple);border-radius:0.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+        .tips-box h3{font-size:0.95rem;color:var(--text-primary);margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem}
+        .tips-box p{font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.4rem}
+        .tips-box ul{padding-left:1.5rem;margin-top:0.5rem}
+        .tips-box li{font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.4rem}
+        
+        .download-container{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem}
+        @media (max-width:768px){
+            .app-container{padding:1rem 0.75rem}
+            h1{font-size:1.75rem}
+            .panel{padding:1rem}
+            .grid-input{flex-direction:column;align-items:flex-start;gap:0.75rem}
+            .input-group{width:100%;flex-direction:row;align-items:center;justify-content:space-between}
+            .grid-input input{width:100px}
+            .download-container{grid-template-columns:1fr}
+        }
+        
+        .sample-section {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .sample-title {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .sample-image {
+            max-width: 50%;
+            border-radius: 0.75rem;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .sample-image:hover {
+            transform: scale(1.02);
+        }
+        .sample-caption {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle color theme">
+        <span id="theme-icon">🌙</span>
+    </button>
+    
+    <div class="app-container">
+        <header>
+            <h1>Grid Splitter</h1>
+        </header>
+        
+        <main class="main-content">
+            <section class="panel">
+                <h2 class="panel-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    Image Upload
+                </h2>
+                <div class="upload-container">
+                    <div id="image-preview" class="upload-area">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p class="upload-text">Drag and drop your image here, or click to browse</p>
+                    </div>
+                    
+                    <button id="upload-btn" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        Upload Image
+                    </button>
+                    <input type="file" id="file-input" style="display: none" accept="image/*">
+                </div>
+                
+                <div class="grid-controls">
+                    <div class="grid-input">
+                        <div class="input-group">
+                            <label for="rows">Rows:</label>
+                            <input type="number" id="rows" min="1" max="10" value="3">
+                        </div>
+                        <div class="input-group">
+                            <label for="columns">Columns:</label>
+                            <input type="number" id="columns" min="1" max="10" value="3">
+                        </div>
+                        <button id="split-btn" class="btn btn-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="3" y1="9" x2="21" y2="9"></line>
+                                <line x1="3" y1="15" x2="21" y2="15"></line>
+                                <line x1="9" y1="3" x2="9" y2="21"></line>
+                                <line x1="15" y1="3" x2="15" y2="21"></line>
+                            </svg>
+                            Create Grid
+                        </button>
+                    </div>
+                    <div id="grid-dimensions" class="grid-dimensions" style="display: none;">
+                        <span>Current grid: <strong id="current-rows">3</strong> × <strong id="current-cols">3</strong></span>
+                    </div>
+                </div>
+
+               
+                <div class="tips-box">
+                    <h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        Tips
+                    </h3>
+                    <ul>
+                        <li>Drag the grid lines to customize your layout</li>
+                        <li>Hover over a cell to see its position</li>
+                        <li>Click the download button on a cell to save just that portion</li>
+                        <li>Use "Download All Images" to get everything as a ZIP file</li>
+                    </ul>
+                </div>
+                 <!-- Sample Grid Image Section -->
+              <div class="sample-section">
+                <div class="sample-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="3" y1="15" x2="21" y2="15"></line>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                        <line x1="15" y1="3" x2="15" y2="21"></line>
+                    </svg>
+                    Sample Grid
+                </div>
+                <img src="avatar_grid_1.png" alt="Sample Avatar Grid" class="sample-image" id="sample-image">
+                <p class="sample-caption">Click to use this sample grid</p>
+            </div>
+            </section>
+
+             
+            
+            
+            <section id="preview-panel" class="panel" style="display: none;">
+                <h2 class="panel-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                    </svg>
+                    Grid Preview
+                </h2>
+                
+                <div id="container" class="container">
+                    <div id="grid-container" class="grid-container"></div>
+                </div>
+                
+                <div id="download-container" class="download-container">
+                    <button id="download-all-btn" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download All Images
+                    </button>
+                    <button id="show-downloads-btn" class="btn btn-tertiary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                        </svg>
+                        Show Download Buttons
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <div id="loading-indicator">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Preparing your images...</div>
+        <div class="loading-subtext">This may take a moment</div>
+    </div>
+    
+    <script>
+        // DOM elements
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const imagePreview = document.getElementById('image-preview');
+        const rowsInput = document.getElementById('rows');
+        const columnsInput = document.getElementById('columns');
+        const splitBtn = document.getElementById('split-btn');
+        const container = document.getElementById('container');
+        const gridContainer = document.getElementById('grid-container');
+        const downloadAllBtn = document.getElementById('download-all-btn');
+        const showDownloadsBtn = document.getElementById('show-downloads-btn');
+        const downloadContainer = document.getElementById('download-container');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const gridDimensions = document.getElementById('grid-dimensions');
+        const currentRows = document.getElementById('current-rows');
+        const currentCols = document.getElementById('current-cols');
+        const sampleImage = document.getElementById('sample-image');
+        
+        // Global variables
+        let uploadedImage = null;
+        let horizontalLines = [];
+        let verticalLines = [];
+        let showAllDownloads = false;
+        
+        // Theme handling
+        const THEME_PREFERENCE_KEY = 'grid_maker_theme_preference';
+        
+        // Check for saved theme or use system preference
+        function initTheme() {
+            const savedTheme = localStorage.getItem(THEME_PREFERENCE_KEY);
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                updateThemeIcon(savedTheme);
+            } else {
+                // Check system preference
+                const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+                if (prefersDarkScheme.matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    updateThemeIcon('dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    updateThemeIcon('light');
+                }
+            }
+        }
+        
+        function updateThemeIcon(theme) {
+            themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem(THEME_PREFERENCE_KEY, newTheme);
+            updateThemeIcon(newTheme);
+        }
+        
+        // Initialize theme
+        initTheme();
+        
+        // Event listeners
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        imagePreview.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileUpload);
+        splitBtn.addEventListener('click', createGrid);
+        downloadAllBtn.addEventListener('click', downloadAllCells);
+        showDownloadsBtn.addEventListener('click', toggleDownloadButtons);
+        themeToggle.addEventListener('click', toggleTheme);
+        
+        // Setup drag and drop for image upload
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            imagePreview.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            imagePreview.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            imagePreview.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            imagePreview.style.borderColor = 'var(--primary)';
+            imagePreview.style.backgroundColor = 'var(--surface-medium)';
+        }
+        
+        function unhighlight() {
+            imagePreview.style.borderColor = 'var(--border)';
+            imagePreview.style.backgroundColor = 'var(--surface-lighter)';
+        }
+        
+        imagePreview.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const file = dt.files[0];
+            handleFile(file);
+        }
+        
+        // Handle file upload
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        }
+        
+        function handleFile(file) {
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                uploadedImage = new Image();
+                uploadedImage.onload = function() {
+                    // Clear previous preview
+                    imagePreview.innerHTML = '';
+                    imagePreview.classList.remove('no-image');
+                    
+                    // Create preview image
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+                    img.className = 'preview-image';
+                    imagePreview.appendChild(img);
+                    
+                    // Update the image preview appearance
+                    imagePreview.style.padding = '0';
+                    imagePreview.style.border = 'none';
+                    imagePreview.style.backgroundColor = 'transparent';
+                };
+                uploadedImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Create the grid
+        function createGrid() {
+            if (!uploadedImage) {
+                alert('Please upload an image first');
+                return;
+            }
+            
+            // Get user input
+            const rows = parseInt(rowsInput.value) || 3;
+            const columns = parseInt(columnsInput.value) || 3;
+            
+            // Update grid dimensions display
+            currentRows.textContent = rows;
+            currentCols.textContent = columns;
+            gridDimensions.style.display = 'flex';
+            
+            // Show preview panel
+            document.getElementById('preview-panel').style.display = 'block';
+            
+            // Set container dimensions based on image aspect ratio
+            const maxWidth = container.parentElement.clientWidth - 48; // Adjust for padding
+            const containerWidth = Math.min(maxWidth, window.innerWidth - 40);
+            const aspectRatio = uploadedImage.height / uploadedImage.width;
+            const containerHeight = containerWidth * aspectRatio;
+            
+            container.style.width = `${containerWidth}px`;
+            container.style.height = `${containerHeight}px`;
+            container.style.display = 'block';
+            
+            // Set background image
+            gridContainer.style.backgroundImage = `url(${uploadedImage.src})`;
+            gridContainer.style.backgroundSize = 'cover';
+            
+            // Clear previous grid
+            gridContainer.innerHTML = '';
+            horizontalLines = [];
+            verticalLines = [];
+            
+            // Create horizontal lines
+            for (let i = 1; i < rows; i++) {
+                const yPos = (i / rows) * 100;
+                const line = document.createElement('div');
+                line.className = 'grid-line horizontal-line';
+                line.style.top = `${yPos}%`;
+                line.style.left = '0';
+                line.dataset.index = i - 1;
+                
+                // Make line draggable
+                line.addEventListener('mousedown', startDragHorizontal);
+                line.addEventListener('touchstart', startDragHorizontalTouch, { passive: false });
+                
+                gridContainer.appendChild(line);
+                horizontalLines.push(line);
+            }
+            
+            // Create vertical lines
+            for (let i = 1; i < columns; i++) {
+                const xPos = (i / columns) * 100;
+                const line = document.createElement('div');
+                line.className = 'grid-line vertical-line';
+                line.style.left = `${xPos}%`;
+                line.style.top = '0';
+                line.dataset.index = i - 1;
+                
+                // Make line draggable
+                line.addEventListener('mousedown', startDragVertical);
+                line.addEventListener('touchstart', startDragVerticalTouch, { passive: false });
+                
+                gridContainer.appendChild(line);
+                verticalLines.push(line);
+            }
+            
+            // Create grid cells
+            createCells(rows, columns);
+            
+            // Show download button
+            downloadContainer.style.display = 'grid';
+            
+            // Reset download buttons visibility
+            showAllDownloads = false;
+            updateDownloadButtonsUI();
+            gridContainer.classList.remove('show-all-downloads');
+        }
+        
+        // Create the grid cells
+        function createCells(rows, columns) {
+            // Clear existing cells
+            const existingCells = document.querySelectorAll('.grid-cell');
+            existingCells.forEach(cell => cell.remove());
+            
+            // Calculate positions
+            const rowPositions = [0];
+            horizontalLines.forEach(line => {
+                rowPositions.push(parseFloat(line.style.top));
+            });
+            rowPositions.push(100);
+            
+            const colPositions = [0];
+            verticalLines.forEach(line => {
+                colPositions.push(parseFloat(line.style.left));
+            });
+            colPositions.push(100);
+            
+            // Create cells
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < columns; col++) {
+                    const top = rowPositions[row];
+                    const left = colPositions[col];
+                    const height = rowPositions[row + 1] - top;
+                    const width = colPositions[col + 1] - left;
+                    
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.style.top = `${top}%`;
+                    cell.style.left = `${left}%`;
+                    cell.style.height = `${height}%`;
+                    cell.style.width = `${width}%`;
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.dataset.top = top;
+                    cell.dataset.left = left;
+                    cell.dataset.height = height;
+                    cell.dataset.width = width;
+                    
+                    // Add cell number
+                    const cellNumber = document.createElement('div');
+                    cellNumber.className = 'cell-number';
+                    cellNumber.textContent = `${row+1}×${col+1}`;
+                    cell.appendChild(cellNumber);
+                    
+                    // Add download button
+                    const downloadBtn = document.createElement('div');
+                    downloadBtn.className = 'cell-download';
+                    downloadBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    `;
+                    downloadBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        downloadSingleCell(cell);
+                    });
+                    cell.appendChild(downloadBtn);
+                    
+                    gridContainer.appendChild(cell);
+                }
+            }
+        }
+        
+        // Drag handlers
+        function startDragHorizontal(e) {
+            e.preventDefault();
+            const line = e.target;
+            const index = parseInt(line.dataset.index);
+            const containerRect = container.getBoundingClientRect();
+            
+            function moveHandler(moveEvent) {
+                const y = moveEvent.clientY - containerRect.top;
+                const percentage = (y / containerRect.height) * 100;
+                
+                // Don't allow lines to cross
+                const minY = index === 0 ? 5 : parseFloat(horizontalLines[index - 1].style.top) + 5;
+                const maxY = index === horizontalLines.length - 1 ? 95 : parseFloat(horizontalLines[index + 1].style.top) - 5;
+                
+                const newPos = Math.max(minY, Math.min(maxY, percentage));
+                line.style.top = `${newPos}%`;
+                
+                // Update cells without recreating grid lines
+                updateCellsWithoutRecreatingGrid();
+                
+                // Maintain download buttons visibility state
+                if (showAllDownloads) {
+                    gridContainer.classList.add('show-all-downloads');
+                }
+            }
+            
+            function upHandler() {
+                document.removeEventListener('mousemove', moveHandler);
+                document.removeEventListener('mouseup', upHandler);
+            }
+            
+            document.addEventListener('mousemove', moveHandler);
+            document.addEventListener('mouseup', upHandler);
+        }
+        
+        function startDragVertical(e) {
+            e.preventDefault();
+            const line = e.target;
+            const index = parseInt(line.dataset.index);
+            const containerRect = container.getBoundingClientRect();
+            
+            function moveHandler(moveEvent) {
+                const x = moveEvent.clientX - containerRect.left;
+                const percentage = (x / containerRect.width) * 100;
+                
+                // Don't allow lines to cross
+                const minX = index === 0 ? 5 : parseFloat(verticalLines[index - 1].style.left) + 5;
+                const maxX = index === verticalLines.length - 1 ? 95 : parseFloat(verticalLines[index + 1].style.left) - 5;
+                
+                const newPos = Math.max(minX, Math.min(maxX, percentage));
+                line.style.left = `${newPos}%`;
+                
+                // Update cells without recreating grid lines
+                updateCellsWithoutRecreatingGrid();
+                
+                // Maintain download buttons visibility state
+                if (showAllDownloads) {
+                    gridContainer.classList.add('show-all-downloads');
+                }
+            }
+            
+            function upHandler() {
+                document.removeEventListener('mousemove', moveHandler);
+                document.removeEventListener('mouseup', upHandler);
+            }
+            
+            document.addEventListener('mousemove', moveHandler);
+            document.addEventListener('mouseup', upHandler);
+        }
+        
+        // Touch event handlers
+        function startDragHorizontalTouch(e) {
+            e.preventDefault();
+            const line = e.target;
+            const index = parseInt(line.dataset.index);
+            const containerRect = container.getBoundingClientRect();
+            
+            function moveHandler(moveEvent) {
+                const touch = moveEvent.touches[0];
+                const y = touch.clientY - containerRect.top;
+                const percentage = (y / containerRect.height) * 100;
+                
+                // Don't allow lines to cross
+                const minY = index === 0 ? 5 : parseFloat(horizontalLines[index - 1].style.top) + 5;
+                const maxY = index === horizontalLines.length - 1 ? 95 : parseFloat(horizontalLines[index + 1].style.top) - 5;
+                
+                const newPos = Math.max(minY, Math.min(maxY, percentage));
+                line.style.top = `${newPos}%`;
+                
+                // Update cells without recreating grid lines
+                updateCellsWithoutRecreatingGrid();
+                
+                // Maintain download buttons visibility state
+                if (showAllDownloads) {
+                    gridContainer.classList.add('show-all-downloads');
+                }
+            }
+            
+            function upHandler() {
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', upHandler);
+            }
+            
+            document.addEventListener('touchmove', moveHandler, { passive: false });
+            document.addEventListener('touchend', upHandler);
+        }
+        
+        function startDragVerticalTouch(e) {
+            e.preventDefault();
+            const line = e.target;
+            const index = parseInt(line.dataset.index);
+            const containerRect = container.getBoundingClientRect();
+            
+            function moveHandler(moveEvent) {
+                const touch = moveEvent.touches[0];
+                const x = touch.clientX - containerRect.left;
+                const percentage = (x / containerRect.width) * 100;
+                
+                // Don't allow lines to cross
+                const minX = index === 0 ? 5 : parseFloat(verticalLines[index - 1].style.left) + 5;
+                const maxX = index === verticalLines.length - 1 ? 95 : parseFloat(verticalLines[index + 1].style.left) - 5;
+                
+                const newPos = Math.max(minX, Math.min(maxX, percentage));
+                line.style.left = `${newPos}%`;
+                
+                // Update cells without recreating grid lines
+                updateCellsWithoutRecreatingGrid();
+                
+                // Maintain download buttons visibility state
+                if (showAllDownloads) {
+                    gridContainer.classList.add('show-all-downloads');
+                }
+            }
+            
+            function upHandler() {
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', upHandler);
+            }
+            
+            document.addEventListener('touchmove', moveHandler, { passive: false });
+            document.addEventListener('touchend', upHandler);
+        }
+        
+        // New function to update cells without recreating grid lines
+        function updateCellsWithoutRecreatingGrid() {
+            // Clear existing cells
+            const existingCells = document.querySelectorAll('.grid-cell');
+            existingCells.forEach(cell => cell.remove());
+            
+            const rows = horizontalLines.length + 1;
+            const cols = verticalLines.length + 1;
+            
+            // Calculate positions
+            const rowPositions = [0];
+            horizontalLines.forEach(line => {
+                rowPositions.push(parseFloat(line.style.top));
+            });
+            rowPositions.push(100);
+            
+            const colPositions = [0];
+            verticalLines.forEach(line => {
+                colPositions.push(parseFloat(line.style.left));
+            });
+            colPositions.push(100);
+            
+            // Create cells
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const top = rowPositions[row];
+                    const left = colPositions[col];
+                    const height = rowPositions[row + 1] - top;
+                    const width = colPositions[col + 1] - left;
+                    
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.style.top = `${top}%`;
+                    cell.style.left = `${left}%`;
+                    cell.style.height = `${height}%`;
+                    cell.style.width = `${width}%`;
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.dataset.top = top;
+                    cell.dataset.left = left;
+                    cell.dataset.height = height;
+                    cell.dataset.width = width;
+                    
+                    // Add cell number
+                    const cellNumber = document.createElement('div');
+                    cellNumber.className = 'cell-number';
+                    cellNumber.textContent = `${row+1}×${col+1}`;
+                    cell.appendChild(cellNumber);
+                    
+                    // Add download button
+                    const downloadBtn = document.createElement('div');
+                    downloadBtn.className = 'cell-download';
+                    downloadBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    `;
+                    downloadBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        downloadSingleCell(cell);
+                    });
+                    cell.appendChild(downloadBtn);
+                    
+                    gridContainer.appendChild(cell);
+                }
+            }
+        }
+        
+        // Toggle download buttons visibility
+        function toggleDownloadButtons() {
+            showAllDownloads = !showAllDownloads;
+            
+            if (showAllDownloads) {
+                gridContainer.classList.add('show-all-downloads');
+                showDownloadsBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Hide Download Buttons
+                `;
+            } else {
+                gridContainer.classList.remove('show-all-downloads');
+                showDownloadsBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                    </svg>
+                    Show Download Buttons
+                `;
+            }
+        }
+        
+        function updateDownloadButtonsUI() {
+            showDownloadsBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                </svg>
+                Show Download Buttons
+            `;
+        }
+        
+        // Download single cell
+        function downloadSingleCell(cell) {
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            
+            // Get position and dimensions
+            const top = parseFloat(cell.dataset.top);
+            const left = parseFloat(cell.dataset.left);
+            const height = parseFloat(cell.dataset.height);
+            const width = parseFloat(cell.dataset.width);
+            
+            // Create canvas for cropping
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set high resolution
+            const scale = 2;
+            
+            // Adjust source coordinates to exclude grid lines and UI elements
+            // Add small margins to avoid grid lines
+            const gridLineAdjustment = 1; // 1% adjustment to avoid grid lines
+            const sourceX = ((left + gridLineAdjustment) / 100) * uploadedImage.width;
+            const sourceY = ((top + gridLineAdjustment) / 100) * uploadedImage.height;
+            const sourceWidth = ((width - (2 * gridLineAdjustment)) / 100) * uploadedImage.width;
+            const sourceHeight = ((height - (2 * gridLineAdjustment)) / 100) * uploadedImage.height;
+            
+            canvas.width = sourceWidth * scale;
+            canvas.height = sourceHeight * scale;
+            
+            try {
+                // Draw the cropped image - clean without UI elements
+                ctx.drawImage(
+                    uploadedImage,
+                    sourceX, sourceY, sourceWidth, sourceHeight,
+                    0, 0, canvas.width, canvas.height
+                );
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.download = `grid_${row+1}x${col+1}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                return true;
+            } catch (error) {
+                console.error("Error generating image:", error);
+                alert("There was an error creating this image. Please try again.");
+                return false;
+            }
+        }
+        
+        // Download all cells as ZIP
+        function downloadAllCells() {
+            const cells = document.querySelectorAll('.grid-cell');
+            
+            if (cells.length === 0) {
+                alert("No grid cells to download. Please create a grid first.");
+                return;
+            }
+            
+            // Show loading indicator
+            loadingIndicator.style.display = 'flex';
+            
+            // Create a new ZIP file
+            const zip = new JSZip();
+            
+            // Process each cell and add to ZIP
+            let processedCount = 0;
+            
+            cells.forEach((cell, index) => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                
+                // Get position and dimensions
+                const top = parseFloat(cell.dataset.top);
+                const left = parseFloat(cell.dataset.left);
+                const height = parseFloat(cell.dataset.height);
+                const width = parseFloat(cell.dataset.width);
+                
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set dimensions
+                const scale = 2;
+                
+                // Adjust source coordinates to exclude grid lines and UI elements
+                // Add small margins to avoid grid lines
+                const gridLineAdjustment = 1; // 1% adjustment to avoid grid lines
+                const sourceX = ((left + gridLineAdjustment) / 100) * uploadedImage.width;
+                const sourceY = ((top + gridLineAdjustment) / 100) * uploadedImage.height;
+                const sourceWidth = ((width - (2 * gridLineAdjustment)) / 100) * uploadedImage.width;
+                const sourceHeight = ((height - (2 * gridLineAdjustment)) / 100) * uploadedImage.height;
+                
+                canvas.width = sourceWidth * scale;
+                canvas.height = sourceHeight * scale;
+                
+                try {
+                    // Draw image - clean without UI elements
+                    ctx.drawImage(
+                        uploadedImage,
+                        sourceX, sourceY, sourceWidth, sourceHeight,
+                        0, 0, canvas.width, canvas.height
+                    );
+                    
+                    // Get image data
+                    canvas.toBlob(function(blob) {
+                        // Add the image to the ZIP
+                        zip.file(`grid_${row+1}x${col+1}.png`, blob);
+                        
+                        processedCount++;
+                        
+                        // Update loading text
+                        loadingIndicator.querySelector('.loading-text').textContent = 
+                            `Processing image ${processedCount} of ${cells.length}...`;
+                        
+                        // Generate and download the ZIP when all cells are processed
+                        if (processedCount === cells.length) {
+                            loadingIndicator.querySelector('.loading-text').textContent = 
+                                'Creating ZIP file...';
+                            
+                            zip.generateAsync({type: 'blob'}).then(function(content) {
+                                saveAs(content, 'grid_images.zip');
+                                loadingIndicator.style.display = 'none';
+                            });
+                        }
+                    });
+                    
+                } catch (error) {
+                    console.error("Error processing cell:", error);
+                    processedCount++;
+                    
+                    // Generate ZIP if this was the last cell (even with error)
+                    if (processedCount === cells.length) {
+                        loadingIndicator.querySelector('.loading-text').textContent = 
+                            'Creating ZIP file...';
+                        
+                        zip.generateAsync({type: 'blob'}).then(function(content) {
+                            saveAs(content, 'grid_images.zip');
+                            loadingIndicator.style.display = 'none';
+                        });
+                    }
+                }
+            });
+        }
+        
+        // Add event listener for sample image
+        sampleImage.addEventListener('click', useSampleImage);
+        
+        // Function to use the sample image
+        function useSampleImage() {
+            // Create a new image element
+            uploadedImage = new Image();
+            uploadedImage.onload = function() {
+                // Clear previous preview
+                imagePreview.innerHTML = '';
+                imagePreview.classList.remove('no-image');
+                
+                // Create preview image
+                const img = document.createElement('img');
+                img.src = this.src;
+                img.className = 'preview-image';
+                imagePreview.appendChild(img);
+                
+                // Update the image preview appearance
+                imagePreview.style.padding = '0';
+                imagePreview.style.border = 'none';
+                imagePreview.style.backgroundColor = 'transparent';
+                
+                // Automatically set default 4x3 grid for the sample
+                rowsInput.value = 4;
+                columnsInput.value = 3;
+                
+                // Automatically create grid with these dimensions
+                createGrid();
+            };
+            uploadedImage.src = sampleImage.src;
+        }
+    </script>
+</body>
+</html>
