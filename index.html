@@ -133,11 +133,11 @@
         .container{position:relative;margin:0 auto;background-color:var(--surface-darker);border:1px solid var(--border);border-radius:0.75rem;overflow:hidden;box-shadow:var(--card-shadow);width:100%}
         .grid-container{position:relative;width:100%;height:100%}
         .grid-line{position:absolute;z-index:10;transition:background-color 0.2s ease}
-        .horizontal-line{width:100%;height:16px;cursor:row-resize;border-top:2px dashed var(--accent);margin-top:-8px;background-color:transparent;transition:all 0.2s ease}
-        .horizontal-line:hover{border-top:3px solid var(--primary);background-color:rgba(var(--primary-rgb,255,122,47),0.1);height:20px;margin-top:-10px}
-        .vertical-line{height:100%;width:16px;cursor:col-resize;border-left:2px dashed var(--accent);margin-left:-8px;background-color:transparent;transition:all 0.2s ease}
-        .vertical-line:hover{border-left:3px solid var(--primary);background-color:rgba(var(--primary-rgb,255,122,47),0.1);width:20px;margin-left:-10px}
-        .grid-cell{position:absolute;background-size:cover;background-position:center;border:none;transition:all 0.2s ease}
+        .horizontal-line{width:100%;height:1px;cursor:row-resize;border-top:2px dashed var(--accent);margin-top:0;background-color:transparent;transition:border 0.2s ease;pointer-events:auto;z-index:50}
+        .horizontal-line:hover{border-top:2px solid var(--primary);background-color:transparent;height:1px;margin-top:0}
+        .vertical-line{height:100%;width:1px;cursor:col-resize;border-left:2px dashed var(--accent);margin-left:0;background-color:transparent;transition:border 0.2s ease;pointer-events:auto;z-index:50}
+        .vertical-line:hover{border-left:2px solid var(--primary);background-color:transparent;width:1px;margin-left:0}
+        .grid-cell{position:absolute;background-size:cover;background-position:center;border:none;transition:all 0.2s ease;z-index:5}
         .cell-download{position:absolute;right:12px;top:12px;background-color:var(--surface-base);color:var(--primary);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
         .grid-cell:hover .cell-download{opacity:1;transform:scale(1.1) rotate(5deg)}
         .cell-download:hover{background-color:var(--primary);color:white;transform:scale(1.2) rotate(5deg)!important}
@@ -514,33 +514,86 @@
             // Show preview panel
             document.getElementById('preview-panel').style.display = 'block';
             
-            // Set container dimensions based on image aspect ratio
-            const maxWidth = container.parentElement.clientWidth - 48; // Adjust for padding
-            const containerWidth = Math.min(maxWidth, window.innerWidth - 40);
+            // STEP 1: Prepare a fixed-size rendering canvas that serves as the main reference
+            const RENDER_WIDTH = 600; // Fixed width for consistent rendering
             const aspectRatio = uploadedImage.height / uploadedImage.width;
-            const containerHeight = containerWidth * aspectRatio;
+            const RENDER_HEIGHT = RENDER_WIDTH * aspectRatio;
             
-            container.style.width = `${containerWidth}px`;
-            container.style.height = `${containerHeight}px`;
+            const renderCanvas = document.createElement('canvas');
+            renderCanvas.width = RENDER_WIDTH;
+            renderCanvas.height = RENDER_HEIGHT;
+            const renderCtx = renderCanvas.getContext('2d');
+            
+            // Clear the canvas with a solid background
+            renderCtx.fillStyle = '#ffffff';
+            renderCtx.fillRect(0, 0, RENDER_WIDTH, RENDER_HEIGHT);
+            
+            // Draw image on canvas with high quality settings
+            renderCtx.imageSmoothingEnabled = true;
+            renderCtx.imageSmoothingQuality = 'high';
+            renderCtx.drawImage(uploadedImage, 0, 0, RENDER_WIDTH, RENDER_HEIGHT);
+            
+            // Set container dimensions to match the canvas
+            container.style.width = `${RENDER_WIDTH}px`;
+            container.style.height = `${RENDER_HEIGHT}px`;
             container.style.display = 'block';
+            container.style.position = 'relative';
+            container.style.overflow = 'hidden';
             
-            // Set background image
-            gridContainer.style.backgroundImage = `url(${uploadedImage.src})`;
-            gridContainer.style.backgroundSize = 'cover';
+            // Create a hidden container element to hold the reference canvas
+            let canvasContainer = document.getElementById('reference-canvas-container');
+            if (!canvasContainer) {
+                canvasContainer = document.createElement('div');
+                canvasContainer.id = 'reference-canvas-container';
+                canvasContainer.style.display = 'none';
+                document.body.appendChild(canvasContainer);
+            } else {
+                canvasContainer.innerHTML = '';
+            }
+            canvasContainer.appendChild(renderCanvas);
             
-            // Clear previous grid
+            // Store the canvas as a data-URL and apply as background
+            const renderedImageUrl = renderCanvas.toDataURL('image/png');
+            window.renderedImageUrl = renderedImageUrl; // Store globally for debugging
+            
+            // Clear previous grid contents
             gridContainer.innerHTML = '';
+            gridContainer.style.width = '100%';
+            gridContainer.style.height = '100%';
+            gridContainer.style.position = 'relative';
+            gridContainer.style.backgroundImage = `url(${renderedImageUrl})`;
+            gridContainer.style.backgroundSize = 'cover';
+            gridContainer.style.backgroundPosition = 'center';
+            
+            // Store references for the image processing
+            window.gridRenderWidth = RENDER_WIDTH;
+            window.gridRenderHeight = RENDER_HEIGHT;
+            window.originalWidth = uploadedImage.width;
+            window.originalHeight = uploadedImage.height;
+            
+            console.log('Original image:', 
+                'width =', uploadedImage.width, 
+                'height =', uploadedImage.height,
+                'render width =', RENDER_WIDTH,
+                'render height =', RENDER_HEIGHT
+            );
+            
+            // Clear existing arrays
             horizontalLines = [];
             verticalLines = [];
             
-            // Create horizontal lines
+            // STEP 2: Create the grid with precise measurements
+            // Create horizontal lines at exact positions
             for (let i = 1; i < rows; i++) {
-                const yPos = (i / rows) * 100;
+                const yPos = Math.floor((i / rows) * RENDER_HEIGHT);
+                const percentage = (yPos / RENDER_HEIGHT) * 100;
+                
                 const line = document.createElement('div');
                 line.className = 'grid-line horizontal-line';
-                line.style.top = `${yPos}%`;
+                line.style.top = `${percentage}%`;
                 line.style.left = '0';
                 line.dataset.index = i - 1;
+                line.dataset.yPixel = yPos;
                 
                 // Make line draggable
                 line.addEventListener('mousedown', startDragHorizontal);
@@ -550,14 +603,17 @@
                 horizontalLines.push(line);
             }
             
-            // Create vertical lines
+            // Create vertical lines at exact positions
             for (let i = 1; i < columns; i++) {
-                const xPos = (i / columns) * 100;
+                const xPos = Math.floor((i / columns) * RENDER_WIDTH);
+                const percentage = (xPos / RENDER_WIDTH) * 100;
+                
                 const line = document.createElement('div');
                 line.className = 'grid-line vertical-line';
-                line.style.left = `${xPos}%`;
+                line.style.left = `${percentage}%`;
                 line.style.top = '0';
                 line.dataset.index = i - 1;
+                line.dataset.xPixel = xPos;
                 
                 // Make line draggable
                 line.addEventListener('mousedown', startDragVertical);
@@ -579,45 +635,64 @@
             gridContainer.classList.remove('show-all-downloads');
         }
         
-        // Create the grid cells
+        // Create the grid cells with precise positions
         function createCells(rows, columns) {
-            // Clear existing cells
-            const existingCells = document.querySelectorAll('.grid-cell');
-            existingCells.forEach(cell => cell.remove());
-            
-            // Calculate positions
+            // Calculate exact positions in pixels
             const rowPositions = [0];
             horizontalLines.forEach(line => {
-                rowPositions.push(parseFloat(line.style.top));
+                rowPositions.push(parseInt(line.dataset.yPixel, 10));
             });
-            rowPositions.push(100);
+            rowPositions.push(window.gridRenderHeight);
             
             const colPositions = [0];
             verticalLines.forEach(line => {
-                colPositions.push(parseFloat(line.style.left));
+                colPositions.push(parseInt(line.dataset.xPixel, 10));
             });
-            colPositions.push(100);
+            colPositions.push(window.gridRenderWidth);
             
-            // Create cells
+            // Log the calculated positions for debugging
+            console.log('Grid positions (pixels):', 
+                'rows =', rowPositions, 
+                'columns =', colPositions
+            );
+            
+            // Create cells with exact pixel positions
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < columns; col++) {
                     const top = rowPositions[row];
                     const left = colPositions[col];
-                    const height = rowPositions[row + 1] - top;
-                    const width = colPositions[col + 1] - left;
+                    const bottom = rowPositions[row + 1];
+                    const right = colPositions[col + 1];
+                    
+                    const height = bottom - top;
+                    const width = right - left;
+                    
+                    // Calculate percentages for display
+                    const topPercent = (top / window.gridRenderHeight) * 100;
+                    const leftPercent = (left / window.gridRenderWidth) * 100;
+                    const heightPercent = (height / window.gridRenderHeight) * 100;
+                    const widthPercent = (width / window.gridRenderWidth) * 100;
                     
                     const cell = document.createElement('div');
                     cell.className = 'grid-cell';
-                    cell.style.top = `${top}%`;
-                    cell.style.left = `${left}%`;
-                    cell.style.height = `${height}%`;
-                    cell.style.width = `${width}%`;
+                    cell.style.top = `${topPercent}%`;
+                    cell.style.left = `${leftPercent}%`;
+                    cell.style.height = `${heightPercent}%`;
+                    cell.style.width = `${widthPercent}%`;
+                    
+                    // Store exact pixel coordinates
                     cell.dataset.row = row;
                     cell.dataset.col = col;
-                    cell.dataset.top = top;
-                    cell.dataset.left = left;
-                    cell.dataset.height = height;
-                    cell.dataset.width = width;
+                    cell.dataset.topPixel = top;
+                    cell.dataset.leftPixel = left;
+                    cell.dataset.heightPixel = height;
+                    cell.dataset.widthPixel = width;
+                    
+                    // Log cell coordinates for debugging
+                    console.log(`Cell ${row+1}x${col+1}:`, 
+                        'pixels:', top, left, height, width,
+                        'percent:', topPercent.toFixed(2), leftPercent.toFixed(2), heightPercent.toFixed(2), widthPercent.toFixed(2)
+                    );
                     
                     // Add cell number
                     const cellNumber = document.createElement('div');
@@ -790,8 +865,29 @@
             document.addEventListener('touchend', upHandler);
         }
         
-        // New function to update cells without recreating grid lines
+        // Update cells after dragging grid lines
         function updateCellsWithoutRecreatingGrid() {
+            // Calculate exact positions in pixels
+            const rowPositions = [0];
+            horizontalLines.forEach(line => {
+                // Get the actual pixel position from style.top percentage
+                const percentage = parseFloat(line.style.top);
+                const pixelPos = Math.round((percentage / 100) * window.gridRenderHeight);
+                line.dataset.yPixel = pixelPos;
+                rowPositions.push(pixelPos);
+            });
+            rowPositions.push(window.gridRenderHeight);
+            
+            const colPositions = [0];
+            verticalLines.forEach(line => {
+                // Get the actual pixel position from style.left percentage
+                const percentage = parseFloat(line.style.left);
+                const pixelPos = Math.round((percentage / 100) * window.gridRenderWidth);
+                line.dataset.xPixel = pixelPos;
+                colPositions.push(pixelPos);
+            });
+            colPositions.push(window.gridRenderWidth);
+            
             // Clear existing cells
             const existingCells = document.querySelectorAll('.grid-cell');
             existingCells.forEach(cell => cell.remove());
@@ -799,39 +895,37 @@
             const rows = horizontalLines.length + 1;
             const cols = verticalLines.length + 1;
             
-            // Calculate positions
-            const rowPositions = [0];
-            horizontalLines.forEach(line => {
-                rowPositions.push(parseFloat(line.style.top));
-            });
-            rowPositions.push(100);
-            
-            const colPositions = [0];
-            verticalLines.forEach(line => {
-                colPositions.push(parseFloat(line.style.left));
-            });
-            colPositions.push(100);
-            
-            // Create cells
+            // Create cells with updated positions
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
                     const top = rowPositions[row];
                     const left = colPositions[col];
-                    const height = rowPositions[row + 1] - top;
-                    const width = colPositions[col + 1] - left;
+                    const bottom = rowPositions[row + 1];
+                    const right = colPositions[col + 1];
+                    
+                    const height = bottom - top;
+                    const width = right - left;
+                    
+                    // Calculate percentages for display
+                    const topPercent = (top / window.gridRenderHeight) * 100;
+                    const leftPercent = (left / window.gridRenderWidth) * 100;
+                    const heightPercent = (height / window.gridRenderHeight) * 100;
+                    const widthPercent = (width / window.gridRenderWidth) * 100;
                     
                     const cell = document.createElement('div');
                     cell.className = 'grid-cell';
-                    cell.style.top = `${top}%`;
-                    cell.style.left = `${left}%`;
-                    cell.style.height = `${height}%`;
-                    cell.style.width = `${width}%`;
+                    cell.style.top = `${topPercent}%`;
+                    cell.style.left = `${leftPercent}%`;
+                    cell.style.height = `${heightPercent}%`;
+                    cell.style.width = `${widthPercent}%`;
+                    
+                    // Store exact pixel coordinates
                     cell.dataset.row = row;
                     cell.dataset.col = col;
-                    cell.dataset.top = top;
-                    cell.dataset.left = left;
-                    cell.dataset.height = height;
-                    cell.dataset.width = width;
+                    cell.dataset.topPixel = top;
+                    cell.dataset.leftPixel = left;
+                    cell.dataset.heightPixel = height;
+                    cell.dataset.widthPixel = width;
                     
                     // Add cell number
                     const cellNumber = document.createElement('div');
@@ -899,39 +993,53 @@
         
         // Download single cell
         function downloadSingleCell(cell) {
-            const row = parseInt(cell.dataset.row);
-            const col = parseInt(cell.dataset.col);
-            
-            // Get position and dimensions
-            const top = parseFloat(cell.dataset.top);
-            const left = parseFloat(cell.dataset.left);
-            const height = parseFloat(cell.dataset.height);
-            const width = parseFloat(cell.dataset.width);
-            
-            // Create canvas for cropping
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Set high resolution
-            const scale = 2;
-            
-            // Adjust source coordinates to exclude grid lines and UI elements
-            // Add small margins to avoid grid lines
-            const gridLineAdjustment = 1; // 1% adjustment to avoid grid lines
-            const sourceX = ((left + gridLineAdjustment) / 100) * uploadedImage.width;
-            const sourceY = ((top + gridLineAdjustment) / 100) * uploadedImage.height;
-            const sourceWidth = ((width - (2 * gridLineAdjustment)) / 100) * uploadedImage.width;
-            const sourceHeight = ((height - (2 * gridLineAdjustment)) / 100) * uploadedImage.height;
-            
-            canvas.width = sourceWidth * scale;
-            canvas.height = sourceHeight * scale;
-            
             try {
-                // Draw the cropped image - clean without UI elements
+                // Get exact pixel positions from cell dataset
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const topPixel = parseInt(cell.dataset.topPixel);
+                const leftPixel = parseInt(cell.dataset.leftPixel);
+                const heightPixel = parseInt(cell.dataset.heightPixel);
+                const widthPixel = parseInt(cell.dataset.widthPixel);
+                
+                // Log the exact crop dimensions for debugging
+                console.log(`Downloading cell ${row+1}x${col+1}:`, 
+                    'Rendered coords (px):', leftPixel, topPixel, widthPixel, heightPixel,
+                    'Original dimensions:', uploadedImage.width, uploadedImage.height,
+                    'Render dimensions:', window.gridRenderWidth, window.gridRenderHeight
+                );
+                
+                // Calculate scale factor between rendered grid and original image
+                const scaleX = uploadedImage.width / window.gridRenderWidth;
+                const scaleY = uploadedImage.height / window.gridRenderHeight;
+                
+                // Calculate source coordinates in the original image - EXACT PIXELS
+                const sourceX = Math.round(leftPixel * scaleX);
+                const sourceY = Math.round(topPixel * scaleY);
+                const sourceWidth = Math.round(widthPixel * scaleX);
+                const sourceHeight = Math.round(heightPixel * scaleY);
+                
+                // Log the calculated source coordinates for debugging
+                console.log('Cropping from original image:', 
+                    'source coordinates:', sourceX, sourceY, sourceWidth, sourceHeight,
+                    'scale factors:', scaleX, scaleY
+                );
+                
+                // Create canvas for the output
+                const canvas = document.createElement('canvas');
+                canvas.width = sourceWidth;
+                canvas.height = sourceHeight;
+                const ctx = canvas.getContext('2d');
+                
+                // Use high-quality rendering
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                // Draw the exact region from the original image
                 ctx.drawImage(
                     uploadedImage,
                     sourceX, sourceY, sourceWidth, sourceHeight,
-                    0, 0, canvas.width, canvas.height
+                    0, 0, sourceWidth, sourceHeight
                 );
                 
                 // Create download link
@@ -939,6 +1047,7 @@
                 link.download = `grid_${row+1}x${col+1}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
+                
                 return true;
             } catch (error) {
                 console.error("Error generating image:", error);
@@ -959,49 +1068,61 @@
             // Show loading indicator
             loadingIndicator.style.display = 'flex';
             
-            // Create a new ZIP file
-            const zip = new JSZip();
-            
-            // Process each cell and add to ZIP
-            let processedCount = 0;
-            
-            cells.forEach((cell, index) => {
-                const row = parseInt(cell.dataset.row);
-                const col = parseInt(cell.dataset.col);
+            try {
+                // Calculate scale factor between rendered grid and original image
+                const scaleX = uploadedImage.width / window.gridRenderWidth;
+                const scaleY = uploadedImage.height / window.gridRenderHeight;
                 
-                // Get position and dimensions
-                const top = parseFloat(cell.dataset.top);
-                const left = parseFloat(cell.dataset.left);
-                const height = parseFloat(cell.dataset.height);
-                const width = parseFloat(cell.dataset.width);
+                console.log('Downloading all cells:', 
+                    'Original dimensions:', uploadedImage.width, uploadedImage.height,
+                    'Render dimensions:', window.gridRenderWidth, window.gridRenderHeight,
+                    'Scale factors:', scaleX, scaleY
+                );
                 
-                // Create canvas
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
+                // Create a new ZIP file
+                const zip = new JSZip();
                 
-                // Set dimensions
-                const scale = 2;
+                // Process each cell and add to ZIP
+                let processedCount = 0;
                 
-                // Adjust source coordinates to exclude grid lines and UI elements
-                // Add small margins to avoid grid lines
-                const gridLineAdjustment = 1; // 1% adjustment to avoid grid lines
-                const sourceX = ((left + gridLineAdjustment) / 100) * uploadedImage.width;
-                const sourceY = ((top + gridLineAdjustment) / 100) * uploadedImage.height;
-                const sourceWidth = ((width - (2 * gridLineAdjustment)) / 100) * uploadedImage.width;
-                const sourceHeight = ((height - (2 * gridLineAdjustment)) / 100) * uploadedImage.height;
-                
-                canvas.width = sourceWidth * scale;
-                canvas.height = sourceHeight * scale;
-                
-                try {
-                    // Draw image - clean without UI elements
+                cells.forEach((cell, index) => {
+                    // Get exact pixel positions from cell dataset
+                    const row = parseInt(cell.dataset.row);
+                    const col = parseInt(cell.dataset.col);
+                    const topPixel = parseInt(cell.dataset.topPixel);
+                    const leftPixel = parseInt(cell.dataset.leftPixel);
+                    const heightPixel = parseInt(cell.dataset.heightPixel);
+                    const widthPixel = parseInt(cell.dataset.widthPixel);
+                    
+                    // Calculate source coordinates in the original image - EXACT PIXELS
+                    const sourceX = Math.round(leftPixel * scaleX);
+                    const sourceY = Math.round(topPixel * scaleY);
+                    const sourceWidth = Math.round(widthPixel * scaleX);
+                    const sourceHeight = Math.round(heightPixel * scaleY);
+                    
+                    // Log for debugging
+                    console.log(`ZIP: Cell ${row+1}x${col+1}:`, 
+                        'Source coordinates:', sourceX, sourceY, sourceWidth, sourceHeight
+                    );
+                    
+                    // Create canvas for the output
+                    const canvas = document.createElement('canvas');
+                    canvas.width = sourceWidth;
+                    canvas.height = sourceHeight;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Use high-quality rendering
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    
+                    // Draw the exact region from the original image
                     ctx.drawImage(
                         uploadedImage,
                         sourceX, sourceY, sourceWidth, sourceHeight,
-                        0, 0, canvas.width, canvas.height
+                        0, 0, sourceWidth, sourceHeight
                     );
                     
-                    // Get image data
+                    // Convert to blob and add to ZIP
                     canvas.toBlob(function(blob) {
                         // Add the image to the ZIP
                         zip.file(`grid_${row+1}x${col+1}.png`, blob);
@@ -1023,23 +1144,12 @@
                             });
                         }
                     });
-                    
-                } catch (error) {
-                    console.error("Error processing cell:", error);
-                    processedCount++;
-                    
-                    // Generate ZIP if this was the last cell (even with error)
-                    if (processedCount === cells.length) {
-                        loadingIndicator.querySelector('.loading-text').textContent = 
-                            'Creating ZIP file...';
-                        
-                        zip.generateAsync({type: 'blob'}).then(function(content) {
-                            saveAs(content, 'grid_images.zip');
-                            loadingIndicator.style.display = 'none';
-                        });
-                    }
-                }
-            });
+                });
+            } catch (error) {
+                console.error("Error generating ZIP:", error);
+                alert("There was an error creating the ZIP file. Please try again.");
+                loadingIndicator.style.display = 'none';
+            }
         }
         
         // Add event listener for sample image
@@ -1066,8 +1176,8 @@
                 imagePreview.style.backgroundColor = 'transparent';
                 
                 // Automatically set default 4x3 grid for the sample
-                rowsInput.value = 4;
-                columnsInput.value = 3;
+                rowsInput.value = 3;
+                columnsInput.value = 4;
                 
                 // Automatically create grid with these dimensions
                 createGrid();
