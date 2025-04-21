@@ -561,7 +561,18 @@
         uploadBtn.addEventListener('click', () => fileInput.click());
         imagePreview.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', handleFileUpload);
-        splitBtn.addEventListener('click', createGrid);
+        splitBtn.addEventListener('click', function() {
+            // Make sure we're using the current input values
+            const rows = parseInt(rowsInput.value) || 3;
+            const columns = parseInt(columnsInput.value) || 3;
+            
+            // Update UI to reflect the current values
+            currentRows.textContent = rows;
+            currentCols.textContent = columns;
+            
+            // Create grid with current values
+            createGrid(false);
+        });
         downloadAllBtn.addEventListener('click', downloadAllCells);
         showDownloadsBtn.addEventListener('click', toggleDownloadButtons);
         themeToggle.addEventListener('click', toggleTheme);
@@ -659,6 +670,9 @@
                 currentCols.textContent = columns;
                 gridDimensions.style.display = 'flex';
             }
+            
+            // Debug log the dimensions
+            console.log("Creating grid with dimensions:", rows, "rows ×", columns, "columns");
             
             // Show preview panel
             document.getElementById('preview-panel').style.display = 'block';
@@ -777,6 +791,9 @@
         
         // Create the grid cells with precise positions
         function createCells(rows, columns) {
+            // Debug log received dimensions
+            console.log("Creating cells with dimensions:", rows, "rows ×", columns, "columns");
+            
             // Calculate exact positions in pixels
             const rowPositions = [0];
             horizontalLines.forEach(line => {
@@ -1299,15 +1316,15 @@
         });
         
         // Function to create a sample grid image 
-        function createSampleGridImage(width = 400, height = 400) {
+        function createSampleGridImage(width = 400, height = 400, userRows = 3, userCols = 4) {
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             
-            // Create a sample grid with colored blocks
-            const cellWidth = width / 4;
-            const cellHeight = height / 3;
+            // Create a sample grid with colored blocks - using user-specified rows and columns
+            const cellWidth = width / userCols;
+            const cellHeight = height / userRows;
             const colors = [
                 '#ff6b6b', '#ff922b', '#ffd43b', 
                 '#a9e34b', '#69db7c', '#3bc9db', 
@@ -1319,10 +1336,10 @@
             ctx.fillStyle = '#f8f9fa';
             ctx.fillRect(0, 0, width, height);
             
-            // Draw grid cells with different colors
+            // Draw grid cells with different colors - using user-specified rows and columns
             let colorIndex = 0;
-            for (let row = 0; row < 3; row++) {
-                for (let col = 0; col < 4; col++) {
+            for (let row = 0; row < userRows; row++) {
+                for (let col = 0; col < userCols; col++) {
                     ctx.fillStyle = colors[colorIndex % colors.length];
                     ctx.fillRect(
                         col * cellWidth, 
@@ -1352,8 +1369,12 @@
         // Function to use the sample image
         function useSampleImage() {
             try {
-                // Create a programmatically generated sample image
-                const sampleDataUrl = createSampleGridImage(600, 450);
+                // Get the user-specified rows and columns
+                const userRows = parseInt(rowsInput.value) || 3;
+                const userColumns = parseInt(columnsInput.value) || 3;
+                
+                // Create a programmatically generated sample image with user's dimensions
+                const sampleDataUrl = createSampleGridImage(600, 450, userRows, userColumns);
                 
                 // Create a new image element
                 uploadedImage = new Image();
@@ -1373,12 +1394,8 @@
                     imagePreview.style.border = 'none';
                     imagePreview.style.backgroundColor = 'transparent';
                     
-                    // Automatically set default 4x3 grid for the sample
-                    rowsInput.value = 3;
-                    columnsInput.value = 4;
-                    
                     // Automatically create grid with these dimensions
-                    createGrid();
+                    createGrid(false);
                 };
                 
                 // Use the data URL to avoid CORS issues
