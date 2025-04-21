@@ -1,5 +1,8 @@
 # Grid Splitter
 
+![grid splitter with adjusting grid lines](https://github.com/user-attachments/assets/4f7aaa63-9bb7-4053-bc67-442aeb8d3e1f)
+
+
 A powerful web tool for splitting and managing grid layouts. Create, customize, and export grid templates with ease.
 
 ## Features
