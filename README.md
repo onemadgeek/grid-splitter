@@ -35,16 +35,6 @@ Don't have an image ready? Click "Use Sample Grid" to experiment with the tool u
 - For touch devices, all controls are optimized for easy interaction
 - The tool maintains the original image quality in all exported files
 
-## Technical Details
-
-Grid Splitter is a client-side application built with:
-
-- HTML5
-- CSS3
-- JavaScript
-- jsZip for creating ZIP archives
-- FileSaver.js for downloading files
-
 No server-side processing is used, and your images are never uploaded to any server - all processing happens locally in your browser.
 
 ## License
