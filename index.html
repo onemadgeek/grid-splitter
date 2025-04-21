@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Grid Splitter - A powerful tool for splitting and managing grid layouts. Create, customize and export grid templates with ease. Perfect for web designers and developers.">
     <meta name="keywords" content="grid splitter, grid layout, web design tool, css grid generator, layout builder">
+    <meta name="theme-color" content="#AAFF42">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Grid Splitter</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -32,7 +35,7 @@
             --coral: #FF6B4A;
             
             /* Theme Colors */
-            --primary:var(--lime-green);
+            --primary:#C4FF5A;
             --primary-complement:var(--purple);
             --secondary:var(--purple);
             --secondary-complement:var(--pale-violet-complement);
@@ -69,7 +72,7 @@
         }
         
         [data-theme="light"]{
-            --primary:var(--lime-green);
+            --primary:var(--orange);
             --primary-complement:var(--purple);
             --secondary:var(--purple);
             --secondary-complement:var(--pale-violet-complement);
@@ -103,11 +106,39 @@
             --primary-rgb:170,255,66
         }
         *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-        body{background:linear-gradient(135deg,var(--background-start),var(--background-end));color:var(--text-primary);min-height:100vh;padding:0;margin:0;transition:background 0.5s ease,color 0.3s ease}
-        .app-container{max-width:1400px;margin:0 auto;padding:1.5rem 1rem}
+        body{
+            background:linear-gradient(135deg,var(--background-start),var(--background-end));
+            color:var(--text-primary);
+            min-height:100vh;
+            padding:0;
+            margin:0;
+            transition:background 0.5s ease,color 0.3s ease;
+            background-image: url('avatar_grid_1.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .app-container{
+            max-width:1400px;
+            margin:0 auto;
+            padding:1.5rem 1rem;
+            background-color: rgba(20, 28, 47, 0.85);
+            border-radius: 1rem;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
         header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;position:relative}
-        h1{font-size:2rem;font-weight:700;color:var(--primary);text-align:center;margin:0 auto;letter-spacing:-0.5px}
-        .main-content{display:grid;grid-template-columns:1fr;gap:1.25rem}
+        h1{
+            font-size:2.5rem;
+            font-weight:700;
+            color:var(--primary);
+            text-align:center;
+            margin:0 auto;
+            letter-spacing:-0.5px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        .main-content{display:grid;grid-template-columns:1fr;gap:1.25rem;margin-bottom:100px;}
         @media (min-width:1024px){.main-content{grid-template-columns:1fr 1fr;gap:1.25rem}}
         .panel{background:var(--card-bg);border-radius:1rem;padding:1.25rem;box-shadow:var(--card-shadow);backdrop-filter:blur(10px);transition:all 0.3s ease;height:fit-content}
         .panel-title{font-size:1.1rem;font-weight:600;margin-bottom:1rem;color:var(--text-primary);display:flex;align-items:center;gap:0.5rem}
@@ -119,7 +150,7 @@
         .upload-text{font-size:0.9rem;color:var(--text-secondary);text-align:center;max-width:90%}
         .preview-image{max-width:100%;max-height:100%;object-fit:contain;border-radius:0.75rem}
         .btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem 1.25rem;border-radius:0.5rem;font-weight:600;font-size:0.95rem;cursor:pointer;transition:all 0.3s ease;border:none;box-shadow:0 4px 6px rgba(0,0,0,0.1);margin:10px;}
-        .btn-primary{background:var(--lime-green);color:var(--surface-darker);}
+        .btn-primary{background:var(--primary);color:var(--surface-darker);}
         .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.15);filter:brightness(1.05)}
         .btn-secondary{background:var(--purple);color:white}
         .btn-secondary:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.15);filter:brightness(1.05)}
@@ -145,6 +176,41 @@
         .grid-cell:hover .cell-number{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
         .no-image{display:flex;flex-direction:column;justify-content:center;align-items:center;background-color:var(--surface-light);border:2px dashed var(--border);color:var(--text-secondary);border-radius:0.75rem;height:100%;width:100%;gap:1rem}
         .show-all-downloads .cell-download{opacity:1}
+        
+        /* Mobile improvements for cell interactions */
+        @media (pointer:coarse) {
+            .grid-cell:active .cell-number {
+                opacity:1;
+                transform:translate(-50%,-50%) scale(1.1);
+            }
+            .grid-cell .cell-download {
+                opacity:0.8;
+                width:50px;
+                height:50px;
+            }
+            .cell-download svg {
+                width:20px;
+                height:20px;
+            }
+            .horizontal-line, .vertical-line{
+                border-width:3px;
+            }
+            .horizontal-line:hover, .vertical-line:hover{
+                border-width:3px;
+            }
+        }
+        
+        /* Mobile device class enhancements */
+        .mobile-device .grid-cell .cell-download {
+            opacity:0.8;
+            transform:scale(1);
+        }
+        
+        /* Active state for touch devices */
+        .mobile-device .btn:active {
+            transform:scale(0.97);
+        }
+        
         #loading-indicator{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:var(--background-overlay);z-index:1000;justify-content:center;align-items:center;flex-direction:column;backdrop-filter:blur(8px)}
         .loading-spinner{width:80px;height:80px;margin-bottom:2rem;position:relative}
         .loading-spinner:before,.loading-spinner:after{content:'';position:absolute;border-radius:50%;animation:ripple 2s ease-out infinite;top:0;left:0;width:100%;height:100%}
@@ -174,6 +240,37 @@
             .input-group{width:100%;flex-direction:row;align-items:center;justify-content:space-between}
             .grid-input input{width:100px}
             .download-container{grid-template-columns:1fr}
+            .tips-box h3{font-size:0.9rem}
+            .tips-box li{font-size:0.8rem}
+            .upload-area{width:100%;aspect-ratio:1/1}
+            .upload-text{font-size:0.8rem}
+            .btn{padding:0.65rem 1rem;font-size:0.9rem}
+            .sample-image{max-width:100%}
+        }
+        
+        /* Additional mobile optimizations */
+        @media (max-width:480px){
+            h1{font-size:1.5rem}
+            .panel{padding:0.75rem;border-radius:0.75rem}
+            .panel-title{font-size:1rem}
+            .grid-input input{width:80px}
+            .btn{padding:0.6rem 0.9rem;font-size:0.85rem}
+            .grid-dimensions span{font-size:0.9rem}
+            .grid-dimensions strong{font-size:1.1rem}
+            .theme-toggle{top:1rem;right:1rem;width:48px;height:48px}
+        }
+        
+        @media (max-width: 480px) {
+            .btn {
+                margin: 5px;
+                padding: 0.65rem 1rem;
+                width: 100%; 
+                max-width: 100%;
+            }
+            .download-container {
+                grid-template-columns: 1fr;
+                grid-gap: 0.5rem;
+            }
         }
         
         .sample-section {
@@ -302,8 +399,19 @@
                     </svg>
                     Sample Grid
                 </div>
-                <img src="avatar_grid_1.png" alt="Sample Avatar Grid" class="sample-image" id="sample-image">
-                <p class="sample-caption">Click to use this sample grid</p>
+                <div id="sample-container">
+                    <div class="sample-caption">Click below to use a sample grid</div>
+                    <button id="sample-btn" class="btn btn-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="3" y1="15" x2="21" y2="15"></line>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                            <line x1="15" y1="3" x2="15" y2="21"></line>
+                        </svg>
+                        Use Sample Grid
+                    </button>
+                </div>
             </div>
             </section>
 
@@ -371,13 +479,45 @@
         const gridDimensions = document.getElementById('grid-dimensions');
         const currentRows = document.getElementById('current-rows');
         const currentCols = document.getElementById('current-cols');
-        const sampleImage = document.getElementById('sample-image');
+        const sampleContainer = document.getElementById('sample-container');
+        const previewPanel = document.getElementById('preview-panel');
         
         // Global variables
         let uploadedImage = null;
         let horizontalLines = [];
         let verticalLines = [];
         let showAllDownloads = false;
+        let isMobileDevice = false;
+        
+        // Check if the device is mobile
+        function checkMobileDevice() {
+            isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+            document.body.classList.toggle('mobile-device', isMobileDevice);
+            return isMobileDevice;
+        }
+        
+        // Initial mobile check
+        checkMobileDevice();
+        
+        // Update on resize
+        window.addEventListener('resize', function() {
+            checkMobileDevice();
+            
+            // If grid is already visible, resize it responsively
+            if (previewPanel.style.display !== 'none' && uploadedImage) {
+                adjustGridForCurrentScreen();
+            }
+        });
+        
+        function adjustGridForCurrentScreen() {
+            const isMobile = window.innerWidth <= 768;
+            const newWidth = isMobile ? Math.min(window.innerWidth - 40, 600) : 600;
+            
+            if (newWidth !== window.gridRenderWidth) {
+                // Recalculate grid with new dimensions
+                createGrid(true);
+            }
+        }
         
         // Theme handling
         const THEME_PREFERENCE_KEY = 'grid_maker_theme_preference';
@@ -496,26 +636,36 @@
         }
         
         // Create the grid
-        function createGrid() {
+        function createGrid(isResize = false) {
             if (!uploadedImage) {
                 alert('Please upload an image first');
                 return;
             }
             
             // Get user input
-            const rows = parseInt(rowsInput.value) || 3;
-            const columns = parseInt(columnsInput.value) || 3;
+            let rows, columns;
             
-            // Update grid dimensions display
-            currentRows.textContent = rows;
-            currentCols.textContent = columns;
-            gridDimensions.style.display = 'flex';
+            if (isResize) {
+                // Keep existing grid dimensions for resize
+                rows = parseInt(currentRows.textContent) || 3;
+                columns = parseInt(currentCols.textContent) || 3;
+            } else {
+                // Use input values for new grid
+                rows = parseInt(rowsInput.value) || 3;
+                columns = parseInt(columnsInput.value) || 3;
+                
+                // Update grid dimensions display
+                currentRows.textContent = rows;
+                currentCols.textContent = columns;
+                gridDimensions.style.display = 'flex';
+            }
             
             // Show preview panel
             document.getElementById('preview-panel').style.display = 'block';
             
-            // STEP 1: Prepare a fixed-size rendering canvas that serves as the main reference
-            const RENDER_WIDTH = 600; // Fixed width for consistent rendering
+            // STEP 1: Calculate responsive width based on screen size
+            const isMobile = window.innerWidth <= 768;
+            const RENDER_WIDTH = isMobile ? Math.min(window.innerWidth - 40, 600) : 600;
             const aspectRatio = uploadedImage.height / uploadedImage.width;
             const RENDER_HEIGHT = RENDER_WIDTH * aspectRatio;
             
@@ -539,18 +689,8 @@
             container.style.display = 'block';
             container.style.position = 'relative';
             container.style.overflow = 'hidden';
-            
-            // Create a hidden container element to hold the reference canvas
-            let canvasContainer = document.getElementById('reference-canvas-container');
-            if (!canvasContainer) {
-                canvasContainer = document.createElement('div');
-                canvasContainer.id = 'reference-canvas-container';
-                canvasContainer.style.display = 'none';
-                document.body.appendChild(canvasContainer);
-            } else {
-                canvasContainer.innerHTML = '';
-            }
-            canvasContainer.appendChild(renderCanvas);
+            container.style.maxWidth = '100%';
+            container.style.margin = '0 auto';
             
             // Store the canvas as a data-URL and apply as background
             const renderedImageUrl = renderCanvas.toDataURL('image/png');
@@ -1152,37 +1292,102 @@
             }
         }
         
-        // Add event listener for sample image
-        sampleImage.addEventListener('click', useSampleImage);
+        // Update the document.ready function to include the sample button
+        document.addEventListener('DOMContentLoaded', function() {
+            const sampleBtn = document.getElementById('sample-btn');
+            sampleBtn.addEventListener('click', useSampleImage);
+        });
+        
+        // Function to create a sample grid image 
+        function createSampleGridImage(width = 400, height = 400) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // Create a sample grid with colored blocks
+            const cellWidth = width / 4;
+            const cellHeight = height / 3;
+            const colors = [
+                '#ff6b6b', '#ff922b', '#ffd43b', 
+                '#a9e34b', '#69db7c', '#3bc9db', 
+                '#748ffc', '#9775fa', '#f783ac',
+                '#da77f2', '#4dabf7', '#343a40'
+            ];
+            
+            // Fill background
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw grid cells with different colors
+            let colorIndex = 0;
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 4; col++) {
+                    ctx.fillStyle = colors[colorIndex % colors.length];
+                    ctx.fillRect(
+                        col * cellWidth, 
+                        row * cellHeight, 
+                        cellWidth, 
+                        cellHeight
+                    );
+                    
+                    // Add cell number
+                    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                    ctx.font = 'bold 20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(
+                        `${row+1}×${col+1}`, 
+                        col * cellWidth + cellWidth/2, 
+                        row * cellHeight + cellHeight/2
+                    );
+                    
+                    colorIndex++;
+                }
+            }
+            
+            return canvas.toDataURL('image/png');
+        }
         
         // Function to use the sample image
         function useSampleImage() {
-            // Create a new image element
-            uploadedImage = new Image();
-            uploadedImage.onload = function() {
-                // Clear previous preview
-                imagePreview.innerHTML = '';
-                imagePreview.classList.remove('no-image');
+            try {
+                // Create a programmatically generated sample image
+                const sampleDataUrl = createSampleGridImage(600, 450);
                 
-                // Create preview image
-                const img = document.createElement('img');
-                img.src = this.src;
-                img.className = 'preview-image';
-                imagePreview.appendChild(img);
+                // Create a new image element
+                uploadedImage = new Image();
+                uploadedImage.onload = function() {
+                    // Clear previous preview
+                    imagePreview.innerHTML = '';
+                    imagePreview.classList.remove('no-image');
+                    
+                    // Create preview image
+                    const img = document.createElement('img');
+                    img.src = sampleDataUrl;
+                    img.className = 'preview-image';
+                    imagePreview.appendChild(img);
+                    
+                    // Update the image preview appearance
+                    imagePreview.style.padding = '0';
+                    imagePreview.style.border = 'none';
+                    imagePreview.style.backgroundColor = 'transparent';
+                    
+                    // Automatically set default 4x3 grid for the sample
+                    rowsInput.value = 3;
+                    columnsInput.value = 4;
+                    
+                    // Automatically create grid with these dimensions
+                    createGrid();
+                };
                 
-                // Update the image preview appearance
-                imagePreview.style.padding = '0';
-                imagePreview.style.border = 'none';
-                imagePreview.style.backgroundColor = 'transparent';
+                // Use the data URL to avoid CORS issues
+                uploadedImage.src = sampleDataUrl;
                 
-                // Automatically set default 4x3 grid for the sample
-                rowsInput.value = 3;
-                columnsInput.value = 4;
-                
-                // Automatically create grid with these dimensions
-                createGrid();
-            };
-            uploadedImage.src = sampleImage.src;
+            } catch (error) {
+                console.error("Error creating sample image:", error);
+                alert("There was an error loading the sample image. Please try uploading your own image instead.");
+            }
         }
     </script>
 </body>
